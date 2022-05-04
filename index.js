@@ -22,11 +22,11 @@ function parseId(id) {
   }
   const path = id.substr(0, idx);
   const qs = id.substr(idx + 1);
-  return {path, qs};
+  return { path, qs };
 }
 
 module.exports = (options = {}) => {
-  const { defaultExport = "component" } = options;
+  const { defaultExport = "component", svgo = true } = options;
 
   const isComponentMode = (qs) => {
     const params = new URLSearchParams(qs);
@@ -43,19 +43,25 @@ module.exports = (options = {}) => {
     enforce: "pre",
     name: "solid-svg",
     resolveId(id, importer) {
-      const {path, qs} = parseId(id);
+      const { path, qs } = parseId(id);
       if (!path.endsWith(".svg") && !path.endsWith(".svg.tsx")) {
         return null;
       }
 
-      const resolvedPath = nodePath.relative( nodePath.resolve("."), nodePath.resolve(nodePath.dirname(importer), id));
+      const resolvedPath = nodePath.relative(
+        nodePath.resolve("."),
+        nodePath.resolve(nodePath.dirname(importer), id)
+      );
 
       if (id.indexOf("[name]") >= 0) {
         return resolvedPath;
       }
 
       if (isComponentMode(qs)) {
-        const resolvedPathAsComponent =  resolvedPath.replace(/\.svg(\.tsx)?/, ".svg.tsx");
+        const resolvedPathAsComponent = resolvedPath.replace(
+          /\.svg(\.tsx)?/,
+          ".svg.tsx"
+        );
         return resolvedPathAsComponent;
       }
 
@@ -64,7 +70,7 @@ module.exports = (options = {}) => {
     },
 
     async load(id) {
-      const {path, qs} = parseId(id);
+      const { path, qs } = parseId(id);
       if (!path.endsWith(".svg") && !path.endsWith(".svg.tsx")) {
         return null;
       }
@@ -74,7 +80,7 @@ module.exports = (options = {}) => {
         const files = fg.sync(pattern);
         const regex = new RegExp(id.replace("[name].svg", "(.*)\\.svg"));
         let source = "export default {\n";
-        files.forEach(file => {
+        files.forEach((file) => {
           const matched = regex.exec(file);
           const name = matched[1];
           source += `"${name}": () => import("./${name}.svg${qs}"),\n`;
@@ -87,12 +93,16 @@ module.exports = (options = {}) => {
       if (isComponentMode(qs)) {
         const svgPath = path.replace(".svg.tsx", ".svg");
         const code = await readFile(svgPath);
-        const svg = await optimizeSvg(code, svgPath);
+        let svg;
+        if (svgo) {
+          svg = await optimizeSvg(code, svgPath);
+        } else {
+          svg = code.toString("utf-8");
+        }
         const result = await compileSvg(svg);
 
         return result;
       }
     },
-
   };
 };

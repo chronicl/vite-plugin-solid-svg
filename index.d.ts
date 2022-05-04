@@ -1,13 +1,14 @@
-declare module 'vite-plugin-solid-svg' {
-  import type { Plugin } from 'vite';
+declare module "vite-plugin-solid-svg" {
+  import type { Plugin } from "vite";
   interface Options {
-    defaultExport?: "component" | "url"
+    defaultExport?: "component" | "url";
+    svgo?: boolean;
   }
 
-  function svg(options?: Options): Plugin
-  export default svg
+  function svg(options?: Options): Plugin;
+  export default svg;
 }
 
-declare module '*.svg';
-declare module '*.svg?component';
-declare module '*.svg?url';
+declare module "*.svg";
+declare module "*.svg?component";
+declare module "*.svg?url";
