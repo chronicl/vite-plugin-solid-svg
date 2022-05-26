@@ -3,6 +3,7 @@ declare module "vite-plugin-solid-svg" {
   interface Options {
     defaultExport?: "component" | "url";
     svgo?: boolean;
+    usvg?: boolean;
   }
 
   function svg(options?: Options): Plugin;

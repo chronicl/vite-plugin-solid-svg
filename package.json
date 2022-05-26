@@ -18,7 +18,8 @@
   "types": "./lsdindex.d.ts",
   "dependencies": {
     "fast-glob": "^3.2.7",
-    "svgo": "^2.3.1"
+    "svgo": "^2.3.1",
+    "usvg-wasm": "^0.1.2"
   },
   "devDependencies": {
     "eslint": "^7.32.0"

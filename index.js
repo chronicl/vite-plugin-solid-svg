@@ -1,11 +1,12 @@
-"use strict";
+("use strict");
 const nodePath = require("path");
 const fg = require("fast-glob");
 const { readFile } = require("fs/promises");
 const { optimize, loadConfig } = require("svgo");
+const usvgWasm = require("usvg-wasm");
 
-async function compileSvg(source) {
-  const svgWithProps = source.replace(/(?<=<svg.*?)(>)/i, "{...props}>");
+function compileSvg(source) {
+  const svgWithProps = source.replace(/(?<=<svg[^>]*?)(>)/i, " {...props}>");
   return `export default (props = {}) => ${svgWithProps}`;
 }
 
@@ -26,7 +27,7 @@ function parseId(id) {
 }
 
 module.exports = (options = {}) => {
-  const { defaultExport = "component", svgo = true } = options;
+  const { defaultExport = "component", svgo = true, usvg = true } = options;
 
   const isComponentMode = (qs) => {
     const params = new URLSearchParams(qs);
@@ -93,14 +94,24 @@ module.exports = (options = {}) => {
       if (isComponentMode(qs)) {
         const svgPath = path.replace(".svg.tsx", ".svg");
         const code = await readFile(svgPath);
+
         let svg;
         if (svgo) {
           svg = await optimizeSvg(code, svgPath);
         } else {
           svg = code.toString("utf-8");
         }
-        const result = await compileSvg(svg);
 
+        if (usvg) {
+          // Need to insert this since usvg needs the xmlns attribute on the root element
+          svg = svg.replace(
+            /(?<=<svg[^>]*?)(>)/i,
+            ' xmlns="http://www.w3.org/2000/svg">'
+          );
+          svg = usvgWasm.simplifySvg(svg);
+        }
+
+        const result = compileSvg(svg);
         return result;
       }
     },
